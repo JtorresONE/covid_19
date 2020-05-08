@@ -1,6 +1,6 @@
 ---
 title: "covid 19"
-author: "Dr K"
+author: "Jose Torres Vargas"
 date: "5/2/2020"
 output:
   html_document: default
@@ -26,9 +26,15 @@ state of a patient must be died or alive - we adjust that as well
 
 ```{r, include=FALSE}
 kRdata <- filter(kdata,sex !="") %>% mutate(Sex=if_else(sex=="female","F","M")) %>% mutate(result=(if_else(state=="deceased","dead","alive" ))) 
+
+
 kRdata$result <- as.factor(kRdata$result)
 kRdata$Sex <- as.factor(kRdata$Sex)
+kRdata$age = as.numeric(2020-kRdata$birth_year)
 kRdata <- as.tibble(kRdata)
+kRdataOld = filter(kRdata, age > 50)
+
+
 ```
 
 Table of patients:
@@ -36,22 +42,22 @@ Table of patients:
 
 # cross tabulation, patient state by gender
 
-with(kRdata, table(Sex, state))
+with(kRdataOld, table(Sex, result))
 
 ```
 
 ## We create two bar charts - one based on frequency and the other on percent
 
 ```{r}
-barchartGC(~result + Sex,data=kRdata)
-barchartGC(~result + Sex,data=kRdata,type="percent")
+barchartGC(~result + Sex,data=kRdataOld)
+barchartGC(~result + Sex,data=kRdataOld,type="percent")
 ```
 
 ## We see from our row percent numerical data a disparity between men and women  
 
 ```{r}
 
-table1 <- xtabs(~result + Sex,data=kRdata)
+table1 <- xtabs(~result + Sex,data=kRdataOld)
 rowPerc(table1)
 colPerc(table1)
 
@@ -68,7 +74,7 @@ fisher.test(table1)
 ## Explanation of Fisher exact test
 
 The odds ratio is the odds of a Female being alive compared to the odds of a male being alive 
-in this case females are 2.3 times more likely to survive than are males.   Alternatively it is the odds of a male death divided by the odds of a female death.  Basically bad news for men.
+in this case females are 2.9 times more likely to survive than are males.   Alternatively it is the odds of a male death divided by the odds of a female death.  Basically bad news for men.
 
 # Question 2 what is the age distribution of those who contracted Covid contrasted with those who died
 
@@ -114,5 +120,29 @@ goD <-na.omit(goesOnD)
 hist(goD,main=paste("Time till Death"))
 ```
 
+```{r}
+boxplot(kRdata$age ~ kRdata$result, ylab = "Age", xlab = "Type")
+```
+
+```{r}
+
+jTdata<- filter(kRdata,age !="NA") %>%
+  select(result, age) %>%
+  mutate(
+    type = case_when(
+      age < 40 ~ "0 - 39",
+      age >= 40 ~ "Older than 40",
+      TRUE ~ "other"
+    )
+  )
+table2 <- xtabs(~result + type,data=jTdata)
+rowPerc(table2)
+colPerc(table2)
+
+fisher.test(table2)
+```
+  
+  
+  
   
 #### see https://data.library.virginia.edu/working-with-dates-and-time-in-r-using-the-lubridate-package/
